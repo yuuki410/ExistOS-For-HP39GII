@@ -169,19 +169,44 @@ add_custom_target(
     COMMAND ${CMAKE_SOURCE_DIR}/tools/edb -r
     )
 else()
-if(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/  )
+if(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/elftosb)
 add_custom_target(
   OSLoader.sb ALL
   COMMAND ${CMAKE_SOURCE_DIR}/tools/sbtools/elftosb -z -c ${CMAKE_SOURCE_DIR}/Script/build_fw.bd -o ${CMAKE_CURRENT_BINARY_DIR}/OSLoader.sb ${CMAKE_CURRENT_BINARY_DIR}/rom.bin
   DEPENDS rom.bin
   )
+if(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/sbloader)
 add_custom_target(
   flash 
   COMMAND ${CMAKE_SOURCE_DIR}/tools/sbtools/sbloader ${CMAKE_CURRENT_BINARY_DIR}/OSLoader.sb -d
   DEPENDS OSLoader.sb
   )
+else(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/sbloader)
+message(FATAL_ERROR "Please build tools/sbtools first")
+endif(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/sbloader)
+
 else(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/elftosb)
 message(FATAL_ERROR "Please build tools/sbtools first")
 endif(EXISTS ${CMAKE_SOURCE_DIR}/tools/sbtools/elftosb)
+
+if(EXISTS ${CMAKE_SOURCE_DIR}/tools/edb-unix/build/edb)
+add_custom_target(
+    edb_flash_loader 
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/edb-unix/build/edb -r -s -f ${CMAKE_CURRENT_BINARY_DIR}/OSLoader.sb 1408 b
+    DEPENDS OSLoader.sb
+    )
+
+add_custom_target(
+      mscmode 
+      COMMAND ${CMAKE_SOURCE_DIR}/tools/edb-unix/build/edb -m
+      )
+
+add_custom_target(
+    reboot 
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/edb-unix/build/edb -r
+    )
+else()
+message("Non edb binary file found, skipped configure edb command")
+endif()
 endif()
 

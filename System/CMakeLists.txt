@@ -99,14 +99,24 @@ add_custom_target(
   ExistOS.sys ALL
   COMMAND ${CMAKE_OBJCOPY} -I elf32-little -O binary -R .note -R .comment -S ${CMAKE_CURRENT_BINARY_DIR}/sys.elf ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
   COMMAND ${CMAKE_NM} -n ${CMAKE_CURRENT_BINARY_DIR}/sys.elf > ${CMAKE_CURRENT_BINARY_DIR}/sys_symtab.txt 
+  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
   COMMAND ${CMAKE_SOURCE_DIR}/tools/sysigner ${CMAKE_CURRENT_BINARY_DIR}/sys_symtab.txt ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
+  else()
+  COMMAND ${CMAKE_SOURCE_DIR}/tools/sys_signer/build/sysigner ${CMAKE_CURRENT_BINARY_DIR}/sys_symtab.txt ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
+  endif()
   DEPENDS sys.elf 
   )
-
+  if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
   add_custom_target(
     edb_flash_sys 
     COMMAND ${CMAKE_SOURCE_DIR}/tools/edb -r -s -f ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 1984
     DEPENDS ExistOS.sys
     )
-
+  else()
+  add_custom_target(
+    edb_flash_sys 
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/edb-unix/build/edb -r -s -f ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 1984
+    DEPENDS ExistOS.sys
+    )
+  endif()
 add_dependencies(edb_flash_sys timestamp)

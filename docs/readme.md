@@ -1,16 +1,20 @@
-# [ExistOS for HP39gii](https://github.com/ExistOS-Team/ExistOS-For-HP39GII)
+---
+title: ExistOS Project
+---
+
+## ExistOS for HP39gii
 
 [![GPL Licence](https://badges.frapsoft.com/os/gpl/gpl.png?v=103)](https://opensource.org/licenses/GPL-3.0/)
-[![Build Status](../../actions/workflows/build.yml/badge.svg)](../../actions/workflows/build.yml)
+[![Build Status](../../../actions/workflows/build.yml/badge.svg)](../../../actions/workflows/build.yml)
 
 |                             中文                              |                             English                              |
 | :-----------------------------------------------------------: | :--------------------------------------------------------------: |
 | ExistOS 是一群计算器爱好者们为 HP39gii 所创立的开源固件项目。 | ExistOS is a firmware project created by calculator enthusiasts. |
 |      我们欢迎您试用本系统，并为项目提出意见、作出贡献。       |      Welcome to try out and improve this firmware project.       |
-|            [安装教程](docs/zh-cn/installation.md)             |           [Installaion Guide](docs/en/installation.md)           |
-|               [使用指南](docs/zh-cn/manual.md)                |                 [User Manual](docs/en/manual.md)                 |
-|            [卸载 ExistOS](docs/zh-cn/uninstall.md)            |            [Uninstall ExistOS](docs/en/uninstall.md)             |
-|            [贡献教程](docs/zh-cn/contribution.md)             |          [Contribution Guide](docs/en/contribution.md)           |
+|              [安装教程](./zh-cn/installation.md)              |            [Installaion Guide](./en/installation.md)             |
+|                 [使用指南](./zh-cn/manual.md)                 |                  [User Manual](./en/manual.md)                   |
+|             [卸载 ExistOS](./zh-cn/uninstall.md)              |              [Uninstall ExistOS](./en/uninstall.md)              |
+|              [贡献教程](./zh-cn/contribution.md)              |            [Contribution Guide](./en/contribution.md)            |
 
 Thanks to [FreeRTOS kernel](https://github.com/FreeRTOS/FreeRTOS), [TinyUSB](https://github.com/hathach/tinyusb), [FatFs](http://elm-chan.org/fsw/ff/00index_e.html), [dhara](https://github.com/dlbeer/dhara), [KhiCAS](http://www-fourier.ujf-grenoble.fr/~parisse/giac.html) and others great open source project.
 
