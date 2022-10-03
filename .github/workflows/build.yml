@@ -34,13 +34,13 @@ jobs:
           export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
           cd Libs/src/micropython-master/ports/eoslib
           make
-      - name: Build edb
-        run: |
-          git submodule init
-          git submodule update --remote
-          mkdir tools/edb-unix/build
-          cmake -S tools/edb-unix -B tools/edb-unix/build
-          cmake --build tools/edb-unix/build
+      # - name: Build edb
+      #   run: |
+      #     git submodule init
+      #     git submodule update --remote
+      #     mkdir tools/edb-unix/build
+      #     cmake -S tools/edb-unix -B tools/edb-unix/build
+      #     cmake --build tools/edb-unix/build
       - name: CMake configure
         run: |
           export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
