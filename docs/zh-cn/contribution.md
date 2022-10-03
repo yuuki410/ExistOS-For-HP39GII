@@ -68,7 +68,8 @@ Tips：`pkg-config` 会根据 `/usr/lib/pkgconfig/` 中存放的 `_.pc`文件定
 |系统|安装|
 |----|----|
 |Windows|已经预先编译好，在 `tools` 目录下|
-|Linux|`git submodule update --remote`|
+|Linux|`git submodule init`|
+| |`git submodule update --remote`|
 | | `mkdir tools/edb-unix/build` |
 | | `cmake -S tools/edb-unix -B tools/edb-unix/build` |
 | | `cmake --build tools/edb-unix/bulid` |

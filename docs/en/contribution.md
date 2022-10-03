@@ -65,7 +65,8 @@ Comilete `edb-unix`:
 |OS|Installation|
 |----|----|
 |Windows|Binary excuatble available at `tools/`|
-|Linux|`git submodule update --remote`|
+|Linux|`git submodule init`|
+| |`git submodule update --remote`|
 | | `mkdir tools/edb-unix/build` |
 | | `cmake -S tools/edb-unix -B tools/edb-unix/build` |
 | | `cmake --build tools/edb-unix/bulid` |
