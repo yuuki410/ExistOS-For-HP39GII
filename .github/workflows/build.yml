@@ -13,59 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-<<<<<<< HEAD
-      - uses: actions/checkout@v2
-      - name: Install gcc-arm-none-eabi-10.3
-        run: |
-          wget -q "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2"
-          sudo tar -xf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 -C /usr/
-          export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
-      - name: Install packages build sbtools required
-        run: sudo apt-get install libcrypto++6 libcrypto++-dev libusb-1.0-0-dev -y
-      - name: Build sbtools
-        run: |
-          export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
-          cd tools/sbtools
-          make
-      - name: Build syigner
-        run: |
-          export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
-          mkdir tools/sys_signer/build
-          cmake -S tools/sys_signer -B tools/sys_signer/build
-          cmake --build tools/sys_signer/build
-      - name: Build Micro Python eoslib
-        run: |
-          export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
-          cd Libs/src/micropython-master/ports/eoslib
-          make
-      # - name: Build edb
-      #   run: |
-      #     git submodule init
-      #     git submodule update --remote
-      #     mkdir tools/edb-unix/build
-      #     cmake -S tools/edb-unix -B tools/edb-unix/build
-      #     cmake --build tools/edb-unix/build
-      - name: CMake configure
-        run: |
-          export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
-          mkdir build
-          cmake -S . -B build
-      - name: CMake build
-        run: |
-          export PATH=/usr/gcc-arm-none-eabi-10.3-2021.10/bin:$PATH
-          cmake --build build
-      - name: Create GitHub release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: build-${{ github.run_number }}
-          title: build ${{ github.run_number }}
-          prerelease: false
-          files: |
-            ./build/System/ExistOS.sys
-            ./build/System/sys_symtab.txt
-            ./build/OSLoader/OSLoader.sb
-=======
     - uses: actions/checkout@v2
     - name: Install gcc-arm-none-eabi-10.3
       run: |
@@ -108,4 +55,3 @@ jobs:
           ./System/ExistOS.sys
           ./System/sys_symtab.txt
           ./OSLoader/OSLoader.sb
->>>>>>> up

@@ -12,11 +12,6 @@
 |            [卸载 ExistOS](docs/zh-cn/uninstall.md)            |            [Uninstall ExistOS](docs/en/uninstall.md)             |
 |            [贡献教程](docs/zh-cn/contribution.md)             |          [Contribution Guide](docs/en/contribution.md)           |
 
-<<<<<<< HEAD
-Thanks to [FreeRTOS kernel](https://github.com/FreeRTOS/FreeRTOS), [TinyUSB](https://github.com/hathach/tinyusb), [FatFs](http://elm-chan.org/fsw/ff/00index_e.html), [dhara](https://github.com/dlbeer/dhara), [KhiCAS](http://www-fourier.ujf-grenoble.fr/~parisse/giac.html) and others great open source project.
-
-### Todo List
-=======
 参见[仅安装](#仅安装)节以获取安装教程。
 
 ## 目录
@@ -46,7 +41,6 @@ Thanks to [FreeRTOS kernel](https://github.com/FreeRTOS/FreeRTOS), [TinyUSB](htt
 | **[如何卸载并刷回原生系统](#系统卸载并刷回原生系统)** | **[本项目贡献者](#贡献者)** | **[开源许可证](#许可协议)** |
 
 ## 目前工作进展
->>>>>>> up
 
 - [x] Boot
 - [x] 调试串口
@@ -76,8 +70,6 @@ Thanks to [FreeRTOS kernel](https://github.com/FreeRTOS/FreeRTOS), [TinyUSB](htt
 - [x] USB 输入镍氢电池充电功能
 - [x] Saturn 模拟器运行 hp39g 固件
 - [ ] Saturn 模拟器运行 hp48g 固件
-<<<<<<< HEAD
-=======
 
 目前工作进展：如上。关于具体用户界面 GUI 等还在讨论中，如有宝贵意见可于 Issues 提出。
 
@@ -633,4 +625,3 @@ https://github.com/ExistOS-Team/ExistOS-App-demo
 ## 许可协议
 
 [GPL-3.0](./LICENSE)
->>>>>>> up
