@@ -151,8 +151,27 @@ void System(void *par) {
     // DisplayClean();
 
     // DisplayFillBox(32, 32, 224, 64, 128);
-    DisplayFlushArea(103, 32, 152, 56, &logo, false);
-    // DisplayPutStr(64, 42, "System Booting...", 255, 128, 16);
+    // DisplayFlushArea(128-24, 44-3, 128+24, 44+3, &logo, false);
+    #define START_X 16
+    #define START_Y 16
+    #define BLOCK_HEIGHT 6
+    #define BLOCK_WIDTH 2
+    #define FILLED (logo[6*i+j] &(1<<k))
+    for(int i=0; i<8; i++){
+        for(int j=0; j<i+6; j++){
+            for(int k=0; k<8; k++){
+                if(FILLED){
+                    DisplayFillBox(START_X + BLOCK_WIDTH * (8 * j + k), START_Y + BLOCK_HEIGHT * i, START_X + BLOCK_WIDTH * (8 * j + k + 1), START_Y + BLOCK_HEIGHT * (i +1 ), 255);
+                }
+            }
+        }
+    }
+    #undef START_X
+    #undef START_Y
+    #undef BLOCK_HEIGHT
+    #undef BLOCK_WIDTH
+    #undef FILLED
+    // DisplayPutStr(64, 42, "ExistOS for HP39gii", 255, 128, 16);
 
     for (int i = 90; i <= 120; ++i)
         DisplayFillBox(i - 2, 84, i, 92, 72);
@@ -187,7 +206,7 @@ void System(void *par) {
 
                 DisplayFillBox(42, 8, 210, 24, 255);
                 DisplayFillBox(32, 32, 224, 64, 255);
-                DisplayFlushArea(103, 32, 152, 56, &logo, false);
+                // DisplayFlushArea(103, 32, 152, 56, &logo, false);
                 // DisplayPutStr(64, 42, "System Booting...", 255, 128, 16);
 
                 g_MSC_Configuration = MSC_CONF_OSLOADER_EDB;
