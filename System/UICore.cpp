@@ -22,6 +22,8 @@
 
 #include <malloc.h>
 
+#include "console.hpp"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,9 +33,6 @@ extern "C" {
 extern const unsigned char gImage_khicas_ico[48 * 48];
 
 static char power_save = ' ';
-
-UI_Display *uidisp;
-UI_Window *mainw;
 
 bool UIForceRefresh = false;
 
