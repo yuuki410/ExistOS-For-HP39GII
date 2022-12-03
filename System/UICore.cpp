@@ -108,53 +108,40 @@ uint32_t getHeapAllocateSize() {
     return info.uordblks;
 }
 
+#define SET_LANG(lang)                                              \
+    MAIN_WIN_TITLE = MAIN_WIN_TITLE_##lang;                         \
+    MAIN_WIN_FKEY_BAR = MAIN_WIN_FKEY_BAR_##lang;                   \
+    MAIN_WIN_FKEY_BAR2 = MAIN_WIN_FKEY_BAR2_##lang;                 \
+    MAIN_WIN_FKEY_BARFILE = MAIN_WIN_FKEY_BARFILE_##lang;           \
+    UI_Yes = UI_Yes_##lang;                                          \
+    UI_No = UI_No_##lang;                                            \
+    UI_TEMPERRATURE = UI_TEMPERRATURE_##lang;                       \
+    UI_MEMUSE = UI_MEMUSED_##lang;                                  \
+    UI_BATTERY = UI_BATTERY_##lang;                                 \
+    UI_CHARGING = UI_CHARGING_##lang;                               \
+    UI_TIME = UI_TIME_##lang;                                       \
+    UI_Power_Save_Mode = UI_Power_Save_Mode_##lang;                 \
+    UI_Enable_Charge = UI_Enable_Charge_##lang;                     \
+    UI_LANGUAGE = UI_LANGUAGE_##lang;                               \
+    UI_Hours = UI_Hours_##lang;                                     \
+    UI_Minutes = UI_Minutes_##lang;                                 \
+    UI_Seconds = UI_Seconds_##lang;                                 \
+    UI_Storage_Space = UI_Storage_Space_##lang;                     \
+    UI_ONF5Format = UI_ONF5Format_##lang;                           \
+    UI_PhyMem = UI_PhyMem_##lang;                                   \
+    UI_Allocate_Mem = UI_Allocate_Mem_##lang;                       \
+    UI_Compression_rate = UI_Compression_rate_##lang;               \
+    UI_SRAM_Heap_Pre_Allocated = UI_SRAM_Heap_Pre_Allocated_##lang; \
+    UI_Swap_Heap_Pre_Allocated = UI_Swap_Heap_Pre_Allocated_##lang; \
+    UI_Enable_Mem_Swap = UI_Enable_Mem_Swap_##lang;
+
 void UI_SetLang(int lang) {
     switch (lang) {
     case UI_LANG_EN:
-        MAIN_WIN_TITLE = MAIN_WIN_TITLE_EN;
-        MAIN_WIN_FKEY_BAR = MAIN_WIN_FKEY_BAR_EN;
-        MAIN_WIN_FKEY_BAR2 = MAIN_WIN_FKEY_BAR2_EN;
-        MAIN_WIN_FKEY_BARFILE = MAIN_WIN_FKEY_BARFILE_EN;
-
-        UI_TEMPERRATURE = UI_TEMPERRATURE_EN;
-        UI_MEMUSE = UI_MEMUSED_EN;
-        UI_BATTERY = UI_BATTERY_EN;
-        UI_CHARGING = UI_CHARGING_EN;
-        UI_TIME = UI_TIME_EN;
-        UI_Power_Save_Mode = UI_Power_Save_Mode_EN;
-        UI_Enable_Charge = UI_Enable_Charge_EN;
-        UI_LANGUAGE = UI_LANGUAGE_EN;
-        UI_Hours = UI_Hours_EN;
-        UI_Minutes = UI_Minutes_EN;
-        UI_Seconds = UI_Seconds_EN;
-        UI_Storage_Space = UI_Storage_Space_EN;
-        UI_ONF5Format = UI_ONF5Format_EN;
-        UI_PhyMem = UI_PhyMem_EN;
-        UI_Allocate_Mem = UI_Allocate_Mem_EN;
-        UI_Compression_rate = UI_Compression_rate_EN;
+        SET_LANG(EN)
         break;
     case UI_LANG_CN:
-        MAIN_WIN_TITLE = MAIN_WIN_TITLE_CN;
-        MAIN_WIN_FKEY_BAR = MAIN_WIN_FKEY_BAR_CN;
-        MAIN_WIN_FKEY_BAR2 = MAIN_WIN_FKEY_BAR2_CN;
-        MAIN_WIN_FKEY_BARFILE = MAIN_WIN_FKEY_BARFILE_CN;
-
-        UI_TEMPERRATURE = UI_TEMPERRATURE_CN;
-        UI_MEMUSE = UI_MEMUSED_CN;
-        UI_BATTERY = UI_BATTERY_CN;
-        UI_CHARGING = UI_CHARGING_CN;
-        UI_TIME = UI_TIME_CN;
-        UI_Power_Save_Mode = UI_Power_Save_Mode_CN;
-        UI_Enable_Charge = UI_Enable_Charge_CN;
-        UI_LANGUAGE = UI_LANGUAGE_CN;
-        UI_Hours = UI_Hours_CN;
-        UI_Minutes = UI_Minutes_CN;
-        UI_Seconds = UI_Seconds_CN;
-        UI_Storage_Space = UI_Storage_Space_CN;
-        UI_ONF5Format = UI_ONF5Format_CN;
-        UI_PhyMem = UI_PhyMem_CN;
-        UI_Allocate_Mem = UI_Allocate_Mem_CN;
-        UI_Compression_rate = UI_Compression_rate_CN;
+        SET_LANG(CN)
         break;
     default:
         break;
@@ -219,7 +206,7 @@ void pageUpdate() {
 
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "CPU:%3d/%d MHz, %s:%d `C", ll_get_cur_freq(), 480 * 18 / cur_cpu_div / cur_cpu_frac, UI_TEMPERRATURE, ll_get_core_temp());
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s: %d/%d KB", UI_MEMUSE, getHeapAllocateSize() / 1024, TotalAllocatableSize / 1024);
-            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s: %d mv, %s: %s  ", UI_BATTERY, ll_get_bat_voltage(), UI_CHARGING, Charging ? "Yes" : "NO");
+            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s: %d mv, %s: %s  ", UI_BATTERY, ll_get_bat_voltage(), UI_CHARGING, Charging ? UI_Yes : UI_No);
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s: %s", UI_TIME, timeStr);
 
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "[%c]%s .. (1)", power_save, UI_Power_Save_Mode);
@@ -250,9 +237,9 @@ void pageUpdate() {
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s:%d/%d KB   ", UI_Allocate_Mem, getHeapAllocateSize() / 1024, TotalAllocatableSize / 1024);
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s:%d/%d KB   ", UI_PhyMem, total - free, total);
             uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s:%.2f", UI_Compression_rate, mem_cmpr);
-            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "SRAM Heap Pre-allocated: %d KB   ", getOnChipHeapAllocated() / 1024);
-            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "Swap Heap Pre-allocated: %d KB   ", getSwapMemHeapAllocated() / 1024);
-            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "[%c] Enable Memory Swap (1)", ll_mem_swap_size() ? 'X' : ' ');
+            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s:%d KB   ", UI_SRAM_Heap_Pre_Allocated, getOnChipHeapAllocated() / 1024);
+            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "%s:%d KB   ", UI_Swap_Heap_Pre_Allocated, getSwapMemHeapAllocated() / 1024);
+            uidisp->draw_printf(DISPX, DISPY + 16 * line++, 16, 0, 255, "[%c] %s (1)", ll_mem_swap_size() ? 'X' : ' ', UI_Enable_Mem_Swap);
         }
     }
 }
