@@ -7,6 +7,7 @@ class Console {
 private:
     char *term;
     char *inputs;
+    uint32_t inputl;
     uint32_t font_size;
     uint32_t term_x0;
     uint32_t term_y0;
@@ -24,10 +25,11 @@ public:
     void puts(char *str);
     void putchar(char c);
     void refresh();
-    int read(char c);
+    void read(char c);
 };
 
 Console::Console(uint32_t fontsize, UI_Display *ui_disp, UI_Window *ui_win) {
+    printf("Constructor Console\n");
     font_size = fontsize;
     term_x0 = mainw->content_x0;
     term_y0 = mainw->content_y0;
@@ -35,18 +37,24 @@ Console::Console(uint32_t fontsize, UI_Display *ui_disp, UI_Window *ui_win) {
     termh = mainw->content_height / font_size;      // height of terminal
     curx = 0;                                       // position of couser
     cury = 0;                                       // position of couser
-    term = (char *)malloc((termw + 1) * termh);
+    printf("malloc term screen\n");
+    term = (char *)malloc(sizeof(char) * (termw + 1) * termh);
+    // memset(term, 0, sizeof(char) * (termw + 1) * termh);
     uidisp = ui_disp;
     mainw = ui_win;
+    printf("malloc inputs buffer\n");
+    inputs = (char *)malloc(256);
 }
 
 Console::~Console() {
+    printf("Unconstrucor Console\n");
     free(term);
     free(inputs);
 }
 
-char *Console::getc(uint32_t x, uint32_t y) {
-    return term + x * (termw + 1) + y;
+inline char *Console::getc(uint32_t x, uint32_t y) {
+    printf("Getc(%d, %d)", x, y);
+    return (term + x * (termw + 1) + y);
 }
 
 void Console::puts(char *str) {
@@ -82,18 +90,24 @@ void Console::putchar(char c) {
 }
 
 void Console::refresh() {
+    printf("Entry refreshing\n");
     uidisp->draw_box(mainw->content_x0,
                      mainw->content_y0,
                      mainw->content_x0 + mainw->content_width - 0,
                      mainw->content_y0 + mainw->content_height - 0,
                      -1, 0xFF);
     for (uint32_t i = 0; i < termh; i++) {
-        *getc(i, termw) = '\0';
+        printf("Prepare console line %d\n", i);
+        // *getc(i, termw) = '\0';
+        printf("Draw console line %d\n", i);
         uidisp->draw_printf(posx(0), posy(i), font_size, 255, -1, "%s", getc(i, 0));
     }
 }
 
-int Console::read(char c) {
+void Console::read(char c) {
+    *(inputs + inputl) = c;
+    inputl++;
+    putchar(c);
 }
 
 #undef posx

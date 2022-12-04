@@ -4,6 +4,7 @@
 
 #include "SystemUI.h"
 
+#include <cmath>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +37,7 @@ static char power_save = ' ';
 
 UI_Display *uidisp;
 UI_Window *mainw;
+Console *cons;
 
 bool UIForceRefresh = false;
 
@@ -115,8 +117,8 @@ uint32_t getHeapAllocateSize() {
     MAIN_WIN_FKEY_BAR = MAIN_WIN_FKEY_BAR_##lang;                   \
     MAIN_WIN_FKEY_BAR2 = MAIN_WIN_FKEY_BAR2_##lang;                 \
     MAIN_WIN_FKEY_BARFILE = MAIN_WIN_FKEY_BARFILE_##lang;           \
-    UI_Yes = UI_Yes_##lang;                                          \
-    UI_No = UI_No_##lang;                                            \
+    UI_Yes = UI_Yes_##lang;                                         \
+    UI_No = UI_No_##lang;                                           \
     UI_TEMPERRATURE = UI_TEMPERRATURE_##lang;                       \
     UI_MEMUSE = UI_MEMUSED_##lang;                                  \
     UI_BATTERY = UI_BATTERY_##lang;                                 \
@@ -268,6 +270,9 @@ void drawPage(int page) {
                          -1);
         break;
 
+    case 1:
+        printf("Refresh Page\n");
+        cons->refresh();
     case 3:
         pageUpdate();
         break;
@@ -369,314 +374,388 @@ void keyMsg(uint32_t key, int state) {
             free(pathBefore);
         }
 
-        switch (key) {
-        case KEY_SHIFT:
-            shift++;
-            if (shift > 2)
-                shift = 0;
-            refreshIndicator();
-            break;
+        bool pro = false;
+#define K(KEY, NORM, SHIFT, ALPHA, ALPHAS) \
+    case KEY: {                            \
+        if (shift) {                       \
+            cons->read(SHIFT);             \
+            shift = 0;                     \
+        } else {                           \
+            if (abs(alpha) == 1) {         \
+                cons->read(ALPHA);         \
+            } else if (abs(alpha) == 2) {  \
+                cons->read(ALPHAS);        \
+            } else {                       \
+                cons->read(NORM);          \
+            }                              \
+            if (alpha > 0) {               \
+                alpha = 0;                 \
+            }                              \
+        }                                  \
+        pro = true;                        \
+    } break;
+        if (curPage == 1) {
+            {
+                switch (key) {
+                    K(KEY_0, '0', '@', '"', '"')
+                    K(KEY_1, '1', '$', 'X', 'x')
+                    K(KEY_2, '2', '2', 'Y', 'y')
+                    K(KEY_3, '3', '3', 'Z', 'z')
+                    K(KEY_4, '4', '#', 'T', 't')
+                    K(KEY_5, '5', '[', 'U', 'u')
+                    K(KEY_6, '6', ']', 'V', 'v')
+                    K(KEY_7, '7', '&', 'P', 'p')
+                    K(KEY_8, '8', '{', 'Q', 'q')
+                    K(KEY_9, '9', '}', 'R', 'r')
 
-        case KEY_ALPHA:
-            alpha++;
-            if (alpha > 2)
-                alpha = 0;
-            refreshIndicator();
-            break;
-
-        case KEY_ON: {
-            if (shift == 1) {
-                ll_power_off();
+                    K(KEY_VARS, '~', '`', 'A', 'a')
+                    K(KEY_MATH, '\b', '$', 'B', 'b')
+                    K(KEY_ABC, '\'', '\'', 'C', 'c')
+                    K(KEY_XTPHIN, 'X', 'e', 'D', 'd')
+                    K(KEY_BACKSPACE, '\x7F', '\x7F', '\x7F', '\x7F')
+                    K(KEY_SIN, 'e', 'E', 'E', 'e')
+                    K(KEY_COS, 'f', 'F', 'F', 'f')
+                    K(KEY_TAN, 'g', 'G', 'G', 'g')
+                    K(KEY_LN, 'h', 'H', 'H', 'h')
+                    K(KEY_LOG, 'l', 'L', 'L', 'l')
+                    K(KEY_X2, 'j', 'J', 'J', 'j')
+                    K(KEY_XY, '^', '^', 'K', 'k')
+                    K(KEY_LEFTBRACKET, '(', '<', 'L', 'l')
+                    K(KEY_RIGHTBRACKET, ')', '>', 'M', 'm')
+                    K(KEY_DIVISION, '/', '/', 'N', 'n')
+                    K(KEY_COMMA, ',', '`', 'O', 'o')
+                    K(KEY_MULTIPLICATION, '*', '!', 'S', 's')
+                    K(KEY_SUBTRACTION, '-', '-', 'W', 'w')
+                    K(KEY_PLUS, '+', '+', ' ', ' ')
+                    K(KEY_DOT, '.', '=', ':', ':')
+                    K(KEY_NEGATIVE, '_', '|', ';', ';')
+                    K(KEY_ENTER, '\n', '\n', '\n', '\n')
+                }
             }
-            break;
         }
-
-        case KEY_F1:
-            curPage = 0;
-            drawPage(curPage);
-
-            mainw->setFuncKeys(MAIN_WIN_FKEY_BAR);
-            break;
-
-        case KEY_F5:
-            if (curPage == 2)
+#undef K
+        if (!pro) {
+            switch (key) {
+            case KEY_SHIFT:
+                shift++;
+                if (shift > 2)
+                    shift = 0;
+                refreshIndicator();
                 break;
 
-            filesCount = (unsigned long *)malloc(sizeof(unsigned long));
-            pathNow = (TCHAR *)calloc(255, sizeof(TCHAR));
-            pathBefore = (TCHAR *)calloc(255, sizeof(TCHAR));
-            openStatus = (unsigned char *)malloc(sizeof(unsigned char));
-            pageNow = (unsigned int *)malloc(sizeof(unsigned int));
-            pageAll = (unsigned int *)malloc(sizeof(unsigned int));
-            selectedItem = (unsigned char *)malloc(sizeof(unsigned char)); // 1 to 5
+            case KEY_ALPHA:
+                if (shift == 1) {
+                    alpha = -alpha;
+                    shift = 0;
+                } else {
+                    alpha++;
+                    if (alpha > 2)
+                        alpha = 0;
+                }
+                refreshIndicator();
+                break;
 
-            if (pathNow != NULL && pathBefore != NULL && filesCount != NULL && openStatus != NULL && pageNow != NULL && pageAll != NULL) {
-                strcpy(pathNow, "/");
-                strcpy(pathBefore, "/");
-                if (f_opendir(&fileManagerDir, pathNow) == FR_OK) {
-                    if (f_readdir(&fileManagerDir, &fileInfo) == FR_OK) {
-                        f_closedir(&fileManagerDir);
+            case KEY_ON: {
+                if (shift == 1) {
+                    ll_power_off();
+                }
+                break;
+            }
 
-                        *filesCount = getFileCounts(pathNow);
-                        *pageNow = 1;
-                        *selectedItem = 1;
-                        *pageAll = *filesCount / 5 + (*filesCount % 5 == 0 ? 0 : 1);
+            case KEY_F1:
+                curPage = 0;
+                drawPage(curPage);
 
-                        dirItemNames = (TCHAR **)calloc(*filesCount, sizeof(TCHAR *));
-                        dirItemInfos = (bool *)calloc(*filesCount, sizeof(bool));
-                        for (int i = 0; i < *filesCount; i++) {
-                            dirItemNames[i] = (TCHAR *)calloc(255, sizeof(TCHAR));
-                        }
+                mainw->setFuncKeys(MAIN_WIN_FKEY_BAR);
+                break;
 
-                        refreshFileNames(pathNow, dirItemNames, dirItemInfos, filesCount);
-                        if (dirItemNames != NULL) {
-                            curPage = 2;
-                            drawPage(curPage);
-                            mainw->setFuncKeys(MAIN_WIN_FKEY_BARFILE);
+            case KEY_F5:
+                if (curPage == 2)
+                    break;
+
+                filesCount = (unsigned long *)malloc(sizeof(unsigned long));
+                pathNow = (TCHAR *)calloc(255, sizeof(TCHAR));
+                pathBefore = (TCHAR *)calloc(255, sizeof(TCHAR));
+                openStatus = (unsigned char *)malloc(sizeof(unsigned char));
+                pageNow = (unsigned int *)malloc(sizeof(unsigned int));
+                pageAll = (unsigned int *)malloc(sizeof(unsigned int));
+                selectedItem = (unsigned char *)malloc(sizeof(unsigned char)); // 1 to 5
+
+                if (pathNow != NULL && pathBefore != NULL && filesCount != NULL && openStatus != NULL && pageNow != NULL && pageAll != NULL) {
+                    strcpy(pathNow, "/");
+                    strcpy(pathBefore, "/");
+                    if (f_opendir(&fileManagerDir, pathNow) == FR_OK) {
+                        if (f_readdir(&fileManagerDir, &fileInfo) == FR_OK) {
+                            f_closedir(&fileManagerDir);
+
+                            *filesCount = getFileCounts(pathNow);
+                            *pageNow = 1;
+                            *selectedItem = 1;
+                            *pageAll = *filesCount / 5 + (*filesCount % 5 == 0 ? 0 : 1);
+
+                            dirItemNames = (TCHAR **)calloc(*filesCount, sizeof(TCHAR *));
+                            dirItemInfos = (bool *)calloc(*filesCount, sizeof(bool));
+                            for (int i = 0; i < *filesCount; i++) {
+                                dirItemNames[i] = (TCHAR *)calloc(255, sizeof(TCHAR));
+                            }
+
+                            refreshFileNames(pathNow, dirItemNames, dirItemInfos, filesCount);
+                            if (dirItemNames != NULL) {
+                                curPage = 2;
+                                drawPage(curPage);
+                                mainw->setFuncKeys(MAIN_WIN_FKEY_BARFILE);
+                            } else {
+                                *openStatus = 2;
+                            }
+
                         } else {
-                            *openStatus = 2;
+                            *openStatus = 1;
                         }
-
                     } else {
                         *openStatus = 1;
                     }
                 } else {
                     *openStatus = 1;
                 }
-            } else {
-                *openStatus = 1;
+
+                switch (*openStatus) {
+                case 2:
+                    for (int i = 0; i < *filesCount; i++) {
+                        free(dirItemNames[i]);
+                    }
+                    free(dirItemNames);
+                    free(dirItemInfos);
+                    // NO "break;" here. :P
+                case 1:
+                    free(filesCount);
+                    free(openStatus);
+                    free(pathNow);
+                    free(pageNow);
+                    free(pageAll);
+                    free(selectedItem);
+                    free(pathBefore);
+                    break;
+
+                default:
+                    break;
+                }
+                break;
+
+            case KEY_F4: {
+                if (curPage == 3) {
+                    if (page3Subpage < CONF_SUBPAGES - 1)
+                        page3Subpage++;
+
+                    drawPage(curPage);
+                }
+                break;
             }
 
-            switch (*openStatus) {
-            case 2:
-                for (int i = 0; i < *filesCount; i++) {
-                    free(dirItemNames[i]);
+            case KEY_F3: {
+                if (curPage == 3) {
+                    if (page3Subpage > 0)
+                        page3Subpage--;
+
+                    drawPage(curPage);
                 }
-                free(dirItemNames);
-                free(dirItemInfos);
-                // NO "break;" here. :P
-            case 1:
-                free(filesCount);
-                free(openStatus);
-                free(pathNow);
-                free(pageNow);
-                free(pageAll);
-                free(selectedItem);
-                free(pathBefore);
                 break;
+            }
+
+            case KEY_F2: {
+                curPage = 1;
+                printf("Page = 1 Console\n");
+                drawPage(curPage);
+                break;
+            }
+
+            case KEY_F6:
+                curPage = 3;
+                page3Subpage = 0;
+                drawPage(curPage);
+
+                mainw->setFuncKeys(MAIN_WIN_FKEY_BAR2);
+
+                break;
+
+            case KEY_LEFT:
+                if (curPage == 0) {
+                    if (appPage_select > 0) {
+                        appPage_select--;
+                        drawPage(curPage);
+                    }
+                } else if (curPage == 2) {
+                    if (strcmp(pathNow, "/")) {
+                        strcpy(pathNow, pathBefore);
+                        refreshDir();
+                        drawPage(curPage);
+                    }
+                }
+                break;
+
+            case KEY_RIGHT:
+                if (curPage == 0) {
+                    if (appPage_select < 1) {
+                        appPage_select++;
+                        drawPage(curPage);
+                    }
+                }
+                break;
+
+            case KEY_UP:
+                if (curPage == 2) {
+                    if (*selectedItem != 1) {
+                        (*selectedItem)--;
+                        drawPage(curPage);
+                    }
+                }
+                break;
+
+            case KEY_DOWN:
+                if (curPage == 2) {
+                    if (*selectedItem != 5 && (*pageNow - 1) * 5 + *selectedItem != *filesCount) {
+                        (*selectedItem)++;
+                        drawPage(curPage);
+                    }
+                }
+                break;
+
+            case KEY_ENTER:
+                if (curPage == 0) {
+                    if (appPage_select == 0) {
+
+                        void StartKhiCAS();
+                        StartKhiCAS();
+                    }
+                } else if (curPage == 2) {
+                    if (dirItemInfos[(*pageNow - 1) * 5 + *selectedItem - 1] == false) {
+                        // open a folder
+                        strcpy(pathBefore, pathNow);
+                        strcat(pathNow, dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1]);
+                        strcat(pathNow, "/");
+
+                        refreshDir();
+                        drawPage(curPage);
+                    } else {
+                        // do something with the file here...
+                    }
+                }
+                break;
+
+            case KEY_PLUS:
+                if (curPage == 2) {
+                    if (*pageNow < *pageAll) {
+                        (*pageNow)++;
+                        *selectedItem = 1;
+                        drawPage(curPage);
+                    }
+                }
+                break;
+
+            case KEY_SUBTRACTION:
+                if (curPage == 2) {
+                    if (*pageNow > 1) {
+                        (*pageNow)--;
+                        *selectedItem = 1;
+                        drawPage(curPage);
+                    }
+                }
+                break;
+
+            case KEY_1:
+                if (curPage == 3) {
+                    switch (page3Subpage) {
+                    case 0:
+                        if (power_save == 'X') {
+                            power_save = ' ';
+                            ll_cpu_slowdown_enable(false);
+                        } else {
+                            power_save = 'X';
+                            ll_cpu_slowdown_enable(true);
+                        }
+                        break;
+
+                    case 1: {
+                        UI_SetLang(UI_LANG_EN);
+                        mainw->setFuncKeys(MAIN_WIN_FKEY_BAR2);
+                        mainw->refreshWindow();
+
+                        pageUpdate();
+                    } break;
+
+                    case 2: {
+                        printf("enableMemSwap\n");
+                        void enableMemSwap(bool enable);
+                        if (ll_mem_swap_size()) {
+                            enableMemSwap(false);
+                        } else {
+                            enableMemSwap(true);
+                        }
+                    } break;
+
+                    default:
+                        break;
+                    }
+                    drawPage(curPage);
+                }
+                break;
+            case KEY_2:
+                if (curPage == 3) {
+                    switch (page3Subpage) {
+                    case 0:
+                        if (ll_get_charge_status()) {
+
+                            ll_charge_enable(false);
+                        } else {
+
+                            ll_charge_enable(true);
+                        }
+                        break;
+                    case 1: {
+                        UI_SetLang(UI_LANG_CN);
+                        mainw->setFuncKeys(MAIN_WIN_FKEY_BAR2);
+                        mainw->refreshWindow();
+                        drawPage(curPage);
+
+                    } break;
+
+                    default:
+                        break;
+                    }
+                    pageUpdate();
+                }
+                break;
+                /*
+            case KEY_3:
+                if((curPage == 3) && (page3Subpage == 2))
+                {
+                    memtest(32 * 1024);
+                }
+                break;
+            case KEY_4:
+                if((curPage == 3) && (page3Subpage == 2))
+                {
+                    memtest(128 * 1024);
+                }
+                break;
+            case KEY_5:
+                if((curPage == 3) && (page3Subpage == 2))
+                {
+                    memtest(256 * 1024);
+                }
+                break;
+            case KEY_6:
+                if((curPage == 3) && (page3Subpage == 2))
+                {
+                    memtest(768 * 1024);
+                }
+                break;
+                */
 
             default:
+                mainw->refreshWindow();
+                drawPage(curPage);
                 break;
             }
-            break;
-
-        case KEY_F4: {
-            if (curPage == 3) {
-                if (page3Subpage < CONF_SUBPAGES - 1)
-                    page3Subpage++;
-
-                drawPage(curPage);
-            }
-            break;
-        }
-
-        case KEY_F3: {
-            if (curPage == 3) {
-                if (page3Subpage > 0)
-                    page3Subpage--;
-
-                drawPage(curPage);
-            }
-            break;
-        }
-
-        case KEY_F6:
-            curPage = 3;
-            page3Subpage = 0;
-            drawPage(curPage);
-
-            mainw->setFuncKeys(MAIN_WIN_FKEY_BAR2);
-
-            break;
-
-        case KEY_LEFT:
-            if (curPage == 0) {
-                if (appPage_select > 0) {
-                    appPage_select--;
-                    drawPage(curPage);
-                }
-            } else if (curPage == 2) {
-                if (strcmp(pathNow, "/")) {
-                    strcpy(pathNow, pathBefore);
-                    refreshDir();
-                    drawPage(curPage);
-                }
-            }
-            break;
-
-        case KEY_RIGHT:
-            if (curPage == 0) {
-                if (appPage_select < 1) {
-                    appPage_select++;
-                    drawPage(curPage);
-                }
-            }
-            break;
-
-        case KEY_UP:
-            if (curPage == 2) {
-                if (*selectedItem != 1) {
-                    (*selectedItem)--;
-                    drawPage(curPage);
-                }
-            }
-            break;
-
-        case KEY_DOWN:
-            if (curPage == 2) {
-                if (*selectedItem != 5 && (*pageNow - 1) * 5 + *selectedItem != *filesCount) {
-                    (*selectedItem)++;
-                    drawPage(curPage);
-                }
-            }
-            break;
-
-        case KEY_ENTER:
-            if (curPage == 0) {
-                if (appPage_select == 0) {
-
-                    void StartKhiCAS();
-                    StartKhiCAS();
-                }
-            } else if (curPage == 2) {
-                if (dirItemInfos[(*pageNow - 1) * 5 + *selectedItem - 1] == false) {
-                    // open a folder
-                    strcpy(pathBefore, pathNow);
-                    strcat(pathNow, dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1]);
-                    strcat(pathNow, "/");
-
-                    refreshDir();
-                    drawPage(curPage);
-                } else {
-                    // do something with the file here...
-                }
-            }
-            break;
-
-        case KEY_PLUS:
-            if (curPage == 2) {
-                if (*pageNow < *pageAll) {
-                    (*pageNow)++;
-                    *selectedItem = 1;
-                    drawPage(curPage);
-                }
-            }
-            break;
-
-        case KEY_SUBTRACTION:
-            if (curPage == 2) {
-                if (*pageNow > 1) {
-                    (*pageNow)--;
-                    *selectedItem = 1;
-                    drawPage(curPage);
-                }
-            }
-            break;
-
-        case KEY_1:
-            if (curPage == 3) {
-                switch (page3Subpage) {
-                case 0:
-                    if (power_save == 'X') {
-                        power_save = ' ';
-                        ll_cpu_slowdown_enable(false);
-                    } else {
-                        power_save = 'X';
-                        ll_cpu_slowdown_enable(true);
-                    }
-                    break;
-
-                case 1: {
-                    UI_SetLang(UI_LANG_EN);
-                    mainw->setFuncKeys(MAIN_WIN_FKEY_BAR2);
-                    mainw->refreshWindow();
-
-                    pageUpdate();
-                } break;
-
-                case 2: {
-                    printf("enableMemSwap\n");
-                    void enableMemSwap(bool enable);
-                    if (ll_mem_swap_size()) {
-                        enableMemSwap(false);
-                    } else {
-                        enableMemSwap(true);
-                    }
-                } break;
-
-                default:
-                    break;
-                }
-                drawPage(curPage);
-            }
-            break;
-        case KEY_2:
-            if (curPage == 3) {
-                switch (page3Subpage) {
-                case 0:
-                    if (ll_get_charge_status()) {
-
-                        ll_charge_enable(false);
-                    } else {
-
-                        ll_charge_enable(true);
-                    }
-                    break;
-                case 1: {
-                    UI_SetLang(UI_LANG_CN);
-                    mainw->setFuncKeys(MAIN_WIN_FKEY_BAR2);
-                    mainw->refreshWindow();
-                    drawPage(curPage);
-
-                } break;
-
-                default:
-                    break;
-                }
-                pageUpdate();
-            }
-            break;
-            /*
-        case KEY_3:
-            if((curPage == 3) && (page3Subpage == 2))
-            {
-                memtest(32 * 1024);
-            }
-            break;
-        case KEY_4:
-            if((curPage == 3) && (page3Subpage == 2))
-            {
-                memtest(128 * 1024);
-            }
-            break;
-        case KEY_5:
-            if((curPage == 3) && (page3Subpage == 2))
-            {
-                memtest(256 * 1024);
-            }
-            break;
-        case KEY_6:
-            if((curPage == 3) && (page3Subpage == 2))
-            {
-                memtest(768 * 1024);
-            }
-            break;
-            */
-
-        default:
-            mainw->refreshWindow();
-            drawPage(curPage);
-            break;
         }
     }
 }
@@ -786,6 +865,8 @@ void UI_Task(void *_) {
 
     mainw->setFuncKeys(MAIN_WIN_FKEY_BAR);
     mainw->enableFuncKey(true);
+
+    cons = new Console(12, uidisp, mainw);
 
     drawPage(curPage);
     UI_keyScanner(NULL);
