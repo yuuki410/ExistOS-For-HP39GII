@@ -288,7 +288,7 @@ void UI_Refrush() {
 
 void refreshIndicator() {
     uint32_t ind = 0;
-    switch (alpha) {
+    switch (abs(alpha)) {
     case 1:
         ind |= INDICATE_A__Z;
         break;
