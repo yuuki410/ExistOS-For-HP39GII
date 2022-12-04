@@ -814,7 +814,4 @@ public:
 
 #endif
 
-UI_Display *uidisp;
-UI_Window *mainw;
-
 #endif

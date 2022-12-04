@@ -34,6 +34,9 @@ extern const unsigned char gImage_khicas_ico[48 * 48];
 
 static char power_save = ' ';
 
+UI_Display *uidisp;
+UI_Window *mainw;
+
 bool UIForceRefresh = false;
 
 static int curPage = 0;
