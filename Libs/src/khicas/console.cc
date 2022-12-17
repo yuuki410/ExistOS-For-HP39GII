@@ -2652,7 +2652,7 @@ void Console_Draw_TeX_Popup(unsigned char *str, int width, int height)
 #endif
 
 /*
-  ÒÔÏÂº¯ÊýÓÃÓÚÊäÈëÐÐ£¬³É¹¦ºó½«·µ»Ø¸ÃÐÐµÄ×Ö·û´®¡£
+  以下函数用于输入行，成功后将返回该行的字符串。
 */
 
 unsigned char *Console_GetLine()
