@@ -95,6 +95,7 @@ add_custom_command(TARGET sys.elf  POST_BUILD
     COMMAND arm-none-eabi-size ${CMAKE_CURRENT_BINARY_DIR}/sys.elf 
     )
 
+if (${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
 add_custom_target(
   ExistOS.sys ALL
   COMMAND ${CMAKE_OBJCOPY} -I elf32-little -O binary -R .note -R .comment -S ${CMAKE_CURRENT_BINARY_DIR}/sys.elf ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
@@ -102,6 +103,19 @@ add_custom_target(
   COMMAND ${CMAKE_SOURCE_DIR}/tools/sysigner ${CMAKE_CURRENT_BINARY_DIR}/sys_symtab.txt ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
   DEPENDS sys.elf 
   )
+else()
+if(EXISTS ${CMAKE_SOURCE_DIR}/tools/sys_signer/build/  )
+add_custom_target(
+  ExistOS.sys ALL
+  COMMAND ${CMAKE_OBJCOPY} -I elf32-little -O binary -R .note -R .comment -S ${CMAKE_CURRENT_BINARY_DIR}/sys.elf ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
+  COMMAND ${CMAKE_NM} -n ${CMAKE_CURRENT_BINARY_DIR}/sys.elf > ${CMAKE_CURRENT_BINARY_DIR}/sys_symtab.txt 
+  COMMAND ${CMAKE_SOURCE_DIR}/tools/sys_signer/build/sysigner ${CMAKE_CURRENT_BINARY_DIR}/sys_symtab.txt ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 
+  DEPENDS sys.elf 
+  )
+else(EXISTS ${CMAKE_SOURCE_DIR}/tools/sys_signer/build/sysigner)
+message(FATAL_ERROR "Please build tools/sys_signer first")
+endif(EXISTS ${CMAKE_SOURCE_DIR}/tools/sys_signer/build/sysigner)
+endif()
 
   add_custom_target(
     edb_flash_sys 
