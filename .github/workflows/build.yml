@@ -17,9 +17,17 @@ jobs:
     - name: Initialize submodules
       run: |
         git submodule update --init
-    - name: Install gcc-arm-none-eabi-10.3
+    - uses: actions/cache@v3
+      id: gcc-arm-none-eabi-cache
+      with:
+        path: gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
+        key: ${{ runner.os }}-gcc-arm-none-eabi-10.3-2021.10-x86_64
+    - name: Download gcc-arm-none-eabi-10.3
+      if: steps.gcc-arm-none-eabi-cache.outputs.cache-hit != 'true'
       run: |
         wget -q "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2"
+    - name: Install gcc-arm-none-eabi-10.3
+      run: |
         sudo tar -xf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 -C /opt
         echo '/opt/gcc-arm-none-eabi-10.3-2021.10/bin' >> $GITHUB_PATH
     - name: Install packages build sbtools required
