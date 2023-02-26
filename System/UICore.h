@@ -912,10 +912,12 @@ struct SimpShell {
     struct ShellDispLine {
         char col[CONSW];
     } lin[CONSH];
-    uint32_t cx, cy;        /// cursor position
-    bool cursorBlink;       /// set true if cursor blink on
-    bool cursor_displaying; /// set true if cursor displaying
-    UI_Display *uidisp;     /// refer to main windows's ui display interface
+    uint32_t cx, cy;          /// cursor position
+    bool cursorBlink;         /// set true if cursor blink on
+    bool cursor_displaying;   /// set true if cursor displaying
+    UI_Display *uidisp;       /// refer to main windows's ui display interface
+    char *cmd_buffer;         /// buffer of command
+    uint32_t cmd_buffer_size; /// size of command buffer
 
     SimpShell(UI_Display *a_uidisp) {
         this->clear();
@@ -932,7 +934,7 @@ struct SimpShell {
     void refresh() {
         // uidisp->draw_box(DISPX, DISPY, DISPX + DISPW, DISPY + DISPH, -1, 255);
         for (int i = 0; i < CONSH; i++) {
-                uidisp->draw_box(DISPX, DISPY + 8 * i, DISPX + DISPW, DISPY + 8 * (i+1), -1, 255);
+            uidisp->draw_box(DISPX, DISPY + 8 * i, DISPX + DISPW, DISPY + 8 * (i + 1), -1, 255);
             for (int j = 0; j < CONSW; j++) {
                 uidisp->draw_char_ascii(DISPX + (FONTS == 8 ? 6 : 8) * j, DISPY + 8 * i, lin[i].col[j], FONTS, 0, 255);
             }
@@ -969,6 +971,11 @@ struct SimpShell {
     void clear() {
         cx = cy = 0;
         memset(lin, 0, sizeof(lin));
+        if (this->cmd_buffer) {
+            free((void *)(this->cmd_buffer));
+        }
+        this->cmd_buffer = "";
+        this->cmd_buffer_size = 0;
     }
 
     /**
@@ -1034,7 +1041,8 @@ struct SimpShell {
     void puts(const char *s) {
         while (s[0]) {
             if (s[0] == '\n') {
-                if(this->cursor_displaying) this->blink();
+                if (this->cursor_displaying)
+                    this->blink();
                 cy++;
                 cx = 0;
                 this->scroll(0);
@@ -1055,6 +1063,35 @@ struct SimpShell {
             s++;
         }
         this->refresh(0, cy, CONSW, cy);
+    }
+
+    /**
+     * @brief parse command input to console
+     * 
+     * @param s 
+     */
+    void cmdin(const char *s) {
+        if (strlen(s) + strlen(this->cmd_buffer) > this->cmd_buffer_size) {
+            this->cmd_buffer_size=((strlen(s) + strlen(this->cmd_buffer)) / 128 + 1) * 128;
+            char *t=(char*)malloc(sizeof(char) * ((strlen(s) + strlen(this->cmd_buffer)) / 128 + 1) * 128);
+            strcpy(t, this->cmd_buffer);
+            free((void*)(this->cmd_buffer));
+            this->cmd_buffer=t;
+        }
+        strcat(this->cmd_buffer, s);
+    }
+
+    /**
+     * @brief receive key press event
+     *
+     * @param key
+     * @param shift
+     * @param alpha
+     */
+    void keyup(Keys_t key, int shift, int alpha) {
+#define K(key, normal, shift_l, shift_r, alpha_s, alpha_c) \
+    if (shift == 1) {                                      \
+    }
     }
 
     /**

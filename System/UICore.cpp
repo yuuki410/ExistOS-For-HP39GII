@@ -266,7 +266,7 @@ void pageUpdate() {
 
             line = 3;
             uidisp->draw_printf(DISPX + (DISPW - (8 * 29)) / 2, DISPY - 8 + 16 * line++, 16, 64, 255, "Open Source Firmware Project");
-            uidisp->draw_printf(DISPX + (DISPW - (16 * 9 + 8 * 7)) / 2, DISPY - 8 + 16 * line++, 16, 64, 255, "HP39GII¼ÆËãÆ÷¿ªÔ´¹Ì¼þÏîÄ¿");
+            uidisp->draw_printf(DISPX + (DISPW - (16 * 9 + 8 * 7)) / 2, DISPY - 8 + 16 * line++, 16, 64, 255, "HP39GIIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ì¼ï¿½ï¿½ï¿½Ä¿");
             uidisp->draw_printf(DISPX + 16, DISPY - 4 + 16 * line, 8, 64, 255, "github.com/ExistOS-Team");
             uidisp->draw_printf(DISPX + DISPW - 16 - 6 * 21, DISPY - 4 + 16 * line + 8, 8, 64, 255, "/ExistOS-For-HP39GII");
         }
@@ -711,14 +711,63 @@ void keyMsg(uint32_t key, int state) {
                         drawPage(curPage);
                     } else {
                         // do something with the file here...
-                        // strcat(pathNow, dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1]);
-                        // getSuffix(suffix, pathNow);
-
+                        TCHAR *fuck_memory = (TCHAR*)malloc(sizeof(TCHAR) * (strlen(pathNow) + strlen(dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1])));
+                        strcpy(fuck_memory, pathNow);
+                        free(pathNow);
+                        pathNow = fuck_memory;
+                        strcat(pathNow, dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1]);
+                        getSuffix(suffix, pathNow);
+                        printf("Fuck C++");
                         // if (strcmp(suffix, "jpg")) {
                         // }
+                        if (strcmp(suffix, "txt")) {
+                            FIL *textfile;
+                            FRESULT res = f_open(textfile, pathNow, FA_READ);
+                            if (res != FR_OK) {
+                                msgbox = new UI_Msgbox(uidisp, 16, 32, 256 - 32, 64, "Open File Failed", "Press anykey to continue...");
+                                isMsgBoxShow = true;
+                                drawPage(curPage);
+                                isMsgBoxShow = false;
+                                delete msgbox;
+                                drawPage(curPage);
+                            } else {
+                                uidisp->draw_box(DISPX, DISPY, DISPX + DISPW, DISPY + DISPH, -1, 255);
+                                bool exit_file_viewer = false;
+                                printf("Trying open text file");
+                                do {
+                                    uidisp->draw_box(DISPX, DISPY, DISPX + DISPW, DISPY + 8, -1, 0);
+                                    if (strlen(pathNow) > (DISPW / 16)) {
+                                        uidisp->draw_printf(0, 0, 16, 255, 0, "...%s", pathNow + strlen(pathNow) - (DISPW / 16 - 4));
+                                    } else {
+                                        uidisp->draw_printf(0, 0, 16, 255, 0, "%s", pathNow);
+                                    }
+                                    printf("Printed text file path");
+                                    uint32_t key;
+                                    uint32_t keyVal = 0;
+                                    uint32_t press = 0;
+                                    do {
+                                        key = ll_vm_check_key();
+                                        press = key >> 16;
+                                        keyVal = key & 0xFFFF;
+                                    } while (!press);
+                                    printf("Get key val %d", keyVal);
+                                    switch (keyVal) {
+                                    case KEY_VIEWS:
+                                    case KEY_ON:
+                                        exit_file_viewer = true;
+                                        break;
 
-                        // refreshDir();
-                        // getWholePath(pathNow);
+                                    default:
+                                        break;
+                                    }
+                                } while (true);
+                            end_textfile_viewer:
+                                f_close(textfile);
+                            }
+                        }
+
+                        refreshDir();
+                        getWholePath(pathNow);
                     }
                 }
             }
@@ -955,10 +1004,10 @@ static void checkFS() {
 inline void initConsole() {
     console = new SimpShell(uidisp);
     console->puts("\n"
-        "ExistOS Console v0.0.0\n"
-        "2022 (C) ExistOS Team\n"
-        "ExistOS is licensed under GPL-3.0, for more information please visit <https://github.com/ExistOS-Team/ExistOS-For-HP39GII>\n"
-        "Try `help` for commands\n");
+                  "ExistOS Console v0.0.0\n"
+                  "2022 (C) ExistOS Team\n"
+                  "ExistOS is licensed under GPL-3.0, for more information please visit <https://github.com/ExistOS-Team/ExistOS-For-HP39GII>\n"
+                  "Try `help` for commands\n");
     console->refresh();
 }
 
