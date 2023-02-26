@@ -76,10 +76,10 @@ struct strNode *pathList;
 struct strNode *pathList_firstNode;
 static DIR fileManagerDir;
 static FILINFO fileInfo;
-char *conin; /* Console Input Buffer */
+char *conin = nullptr; /* Console Input Buffer */
 void initConsole();
 void refreshConsole();
-void keyupConsole(Keys_t key);
+void keyupConsole(uint32_t key);
 unsigned long getFileCounts(TCHAR *path);
 void refreshFileNames(TCHAR *path, TCHAR **names, bool *info, unsigned long *counts);
 void refreshDir();
@@ -690,6 +690,7 @@ void keyMsg(uint32_t key, int state) {
             } else if (curPage == 1) {
                 goto CONSOLE_KEY_EVENT;
             } else if (curPage == 2) {
+                printf("Pressed Enter key in file explore\n");
                 if (*filesCount > 0) {
                     if (dirItemInfos[(*pageNow - 1) * 5 + *selectedItem - 1] == false) {
                         // open a folder
@@ -711,19 +712,24 @@ void keyMsg(uint32_t key, int state) {
                         drawPage(curPage);
                     } else {
                         // do something with the file here...
-                        TCHAR *fuck_memory = (TCHAR*)malloc(sizeof(TCHAR) * (strlen(pathNow) + strlen(dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1])));
+                        printf("Try opening file:%s\n", pathNow);
+                        TCHAR *fuck_memory = (TCHAR *)malloc(sizeof(TCHAR) * (strlen(pathNow) + strlen(dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1])));
                         strcpy(fuck_memory, pathNow);
-                        free(pathNow);
+                        TCHAR *pathBefore = pathNow; // free(pathNow);
                         pathNow = fuck_memory;
                         strcat(pathNow, dirItemNames[(*pageNow - 1) * 5 + *selectedItem - 1]);
                         getSuffix(suffix, pathNow);
-                        printf("Fuck C++");
-                        // if (strcmp(suffix, "jpg")) {
+                        // if (strcmp(suffix, "jpg")==0) {
                         // }
-                        if (strcmp(suffix, "txt")) {
+                        printf("Opening file:%s\n", pathNow);
+                        printf("File suffix:%s\n", suffix);
+                        printf("strcmp(suffix, \"txt\"); // %d\n", strcmp(suffix, "txt"));
+                        if (strcmp(suffix, "txt") == 0) {
                             FIL *textfile;
-                            FRESULT res = f_open(textfile, pathNow, FA_READ);
+                            FRESULT res = f_open(textfile, pathNow + 1, FA_READ);
+                            printf("Identitied as TXT file\n");
                             if (res != FR_OK) {
+                                printf("FatFS did not returned FR_OK: %d\n", res);
                                 msgbox = new UI_Msgbox(uidisp, 16, 32, 256 - 32, 64, "Open File Failed", "Press anykey to continue...");
                                 isMsgBoxShow = true;
                                 drawPage(curPage);
@@ -731,17 +737,32 @@ void keyMsg(uint32_t key, int state) {
                                 delete msgbox;
                                 drawPage(curPage);
                             } else {
+                                printf("FatFS returned FR_OK\n");
                                 uidisp->draw_box(DISPX, DISPY, DISPX + DISPW, DISPY + DISPH, -1, 255);
                                 bool exit_file_viewer = false;
-                                printf("Trying open text file");
+                                printf("Trying open text file\n");
+                                int16_t line_num = 0;
+                                int16_t row_num = 0;
+                                char line[DISPW / 8 + 1];
+                                char read_buf[1024];
+                                UINT read_size = 0;
                                 do {
-                                    uidisp->draw_box(DISPX, DISPY, DISPX + DISPW, DISPY + 8, -1, 0);
-                                    if (strlen(pathNow) > (DISPW / 16)) {
-                                        uidisp->draw_printf(0, 0, 16, 255, 0, "...%s", pathNow + strlen(pathNow) - (DISPW / 16 - 4));
-                                    } else {
-                                        uidisp->draw_printf(0, 0, 16, 255, 0, "%s", pathNow);
+                                    uidisp->draw_box(DISPX, DISPY + 8, DISPX + DISPW, DISPY + DISPH, -1, 255);
+                                    uidisp->draw_printf(0, 0, 16, 255, 0, "%s", pathNow);
+                                    f_lseek(textfile, line_num * (DISPW / 8 + 1));
+                                    f_read(textfile, read_buf, sizeof(read_buf), &read_size);
+                                    row_num = 0;
+                                    printf("Drawing text content\n");
+                                    for (UINT i = 0; i < read_size; i += (DISPW / 8 + 1)) {
+                                        memcpy(line, read_buf + i, sizeof(line));
+                                        line[DISPW / 8] = '\0';
+                                        uidisp->draw_printf(0, 8 + row_num * 16, 16, 255, 0, "%s", line);
+                                        ++row_num;
+                                        if (row_num >= (DISPH - 8) / 16) {
+                                            break;
+                                        }
                                     }
-                                    printf("Printed text file path");
+                                    printf("Waiting key press\n");
                                     uint32_t key;
                                     uint32_t keyVal = 0;
                                     uint32_t press = 0;
@@ -750,24 +771,38 @@ void keyMsg(uint32_t key, int state) {
                                         press = key >> 16;
                                         keyVal = key & 0xFFFF;
                                     } while (!press);
-                                    printf("Get key val %d", keyVal);
                                     switch (keyVal) {
                                     case KEY_VIEWS:
                                     case KEY_ON:
                                         exit_file_viewer = true;
                                         break;
 
+                                    case KEY_UP:
+                                        if (line_num > 0) {
+                                            --line_num;
+                                        }
+                                        break;
+
+                                    case KEY_DOWN:
+                                        if (row_num >= (DISPH - 8) / 16) {
+                                            ++line_num;
+                                        }
+                                        break;
+
                                     default:
                                         break;
                                     }
-                                } while (true);
+                                } while (!exit_file_viewer);
                             end_textfile_viewer:
                                 f_close(textfile);
                             }
                         }
 
+                        free(pathNow);
+                        pathNow = pathBefore;
                         refreshDir();
                         getWholePath(pathNow);
+                        drawPage(curPage);
                     }
                 }
             }
@@ -905,62 +940,8 @@ void keyMsg(uint32_t key, int state) {
             // mainw->refreshWindow();
             // drawPage(curPage);
             if (curPage == 1) {
-            CONSOLE_KEY_EVENT :
-#define K(KEY, NORM, SHIFT, ALPHA, ALPHAS) \
-    case KEY: {                            \
-        if (shift) {                       \
-            console->puts(SHIFT);          \
-            shift = 0;                     \
-        } else {                           \
-            if (abs(alpha) == 1) {         \
-                console->puts(ALPHA);      \
-            } else if (abs(alpha) == 2) {  \
-                console->puts(ALPHAS);     \
-            } else {                       \
-                console->puts(NORM);       \
-            }                              \
-            if (alpha > 0) {               \
-                alpha = 0;                 \
-            }                              \
-        }                                  \
-    } break;
-            {
-                switch (key) {
-                    K(KEY_0, "0", "@", "\"", "\"")
-                    K(KEY_1, "1", "$", "X", "x")
-                    K(KEY_2, "2", "2", "Y", "y")
-                    K(KEY_3, "3", "3", "Z", "z")
-                    K(KEY_4, "4", "#", "T", "t")
-                    K(KEY_5, "5", "[", "U", "u")
-                    K(KEY_6, "6", "]", "V", "v")
-                    K(KEY_7, "7", "&", "P", "p")
-                    K(KEY_8, "8", "{", "Q", "q")
-                    K(KEY_9, "9", "}", "R", "r")
-                    K(KEY_VARS, "~", "`", "A", "a")
-                    K(KEY_MATH, "\b", "$", "B", "b")
-                    K(KEY_ABC, "\'", "\'", "C", "c")
-                    K(KEY_XTPHIN, "X", "e", "D", "d")
-                    K(KEY_BACKSPACE, "\x7F", "\x7F", "\x7F", "\x7F")
-                    K(KEY_SIN, "e", "E", "E", "e")
-                    K(KEY_COS, "f", "F", "F", "f")
-                    K(KEY_TAN, "g", "G", "G", "g")
-                    K(KEY_LN, "h", "H", "H", "h")
-                    K(KEY_LOG, "l", "L", "L", "l")
-                    K(KEY_X2, "j", "J", "J", "j")
-                    K(KEY_XY, "^", "^", "K", "k")
-                    K(KEY_LEFTBRACKET, "(", "<", "L", "l")
-                    K(KEY_RIGHTBRACKET, ")", ">", "M", "m")
-                    K(KEY_DIVISION, "/", "/", "N", "n")
-                    K(KEY_COMMA, ",", "`", "O", "o")
-                    K(KEY_MULTIPLICATION, "*", "!", "S", "s")
-                    K(KEY_SUBTRACTION, "-", "-", "W", "w")
-                    K(KEY_PLUS, "+", "+", " ", " ")
-                    K(KEY_DOT, ".", "=", ":", ":")
-                    K(KEY_NEGATIVE, "_", "|", ";", ";")
-                    K(KEY_ENTER, "\n", "\n", "\n", "\n")
-                }
-            }
-#undef K
+            CONSOLE_KEY_EVENT:
+                keyupConsole(key);
             }
             break;
         }
@@ -1004,11 +985,18 @@ static void checkFS() {
 inline void initConsole() {
     console = new SimpShell(uidisp);
     console->puts("\n"
-                  "ExistOS Console v0.0.0\n"
+                  "ExistOS Console v0.0.1\n"
                   "2022 (C) ExistOS Team\n"
                   "ExistOS is licensed under GPL-3.0, for more information please visit <https://github.com/ExistOS-Team/ExistOS-For-HP39GII>\n"
-                  "Try `help` for commands\n");
+                  "Type `?` for commands help\n"
+                  "39gii >");
     console->refresh();
+
+    if (conin) {
+        free(conin);
+    }
+    conin = (char *)malloc(sizeof(char) * 512);
+    memset(conin, 0, sizeof(conin));
 }
 
 inline void refreshConsole() {
@@ -1017,17 +1005,145 @@ inline void refreshConsole() {
 
 /**
  * @brief Process key down event send to Console
- * @param key Keys_t
+ * @param key uint32_t
  */
-void keyupConsole(Keys_t key) {
-#define K(ORGIN_KEY, LEFT_SHIFT, RIGHT_SHIFT, CAPITAL_ALPHA, SMALL_ALPHA)
+void keyupConsole(uint32_t key) {
+    char *s = nullptr;
+#define K(KEY, ORGIN_KEY, LEFT_SHIFT, RIGHT_SHIFT, CAPITAL_ALPHA, SMALL_ALPHA) \
+    case KEY: {                                                                \
+        if (abs(shift) == 1) {                                                 \
+            s = (char *)LEFT_SHIFT;                                            \
+            shift = 0;                                                         \
+        } else if (abs(shift) == 2) {                                          \
+            s = (char *)RIGHT_SHIFT;                                           \
+        } else {                                                               \
+            if (abs(alpha) == 1) {                                             \
+                s = (char *)CAPITAL_ALPHA;                                     \
+            } else if (abs(alpha) == 2) {                                      \
+                s = (char *)SMALL_ALPHA;                                       \
+            } else {                                                           \
+                s = (char *)ORGIN_KEY;                                         \
+            }                                                                  \
+            if (alpha > 0) {                                                   \
+                alpha = 0;                                                     \
+            }                                                                  \
+        }                                                                      \
+    } break;
     switch (key) {
     case KEY_ALPHA:
         break;
     case KEY_SHIFT:
         break;
-    default:
+    case KEY_BACKSPACE:
+        if (strlen(conin)) {
+            conin[strlen(conin) - 1] = '\0';
+            console->puts("\b \b");
+        }
         break;
+    case KEY_ENTER:
+        console->puts("\n");
+        if (strlen(conin)) {
+            bool invalid_command = false;
+            switch (conin[0]) {
+            case '?':
+                switch (conin[1]) {
+                case '\0': // ?
+                    console->puts("Help text of ExistOS console\n"
+                                  "Type ?<command> for more infomations\n"
+                                  "Commands: a,ar,v,va,vd,vl\n");
+                    break;
+                case 'a': // ?a
+                    switch (conin[2]) {
+                    case '\0': // ?a
+                        console->puts("Usage: a <filename>\n"
+                                      "Desc: create a new file\n");
+                        break;
+                    case 'r': // ?ar
+                        console->puts("Usage: a <dirname>\n"
+                                      "Desc: create a new directory\n");
+                        break;
+                    default: invalid_command = true;
+                    }
+                    break;
+                case 'v': // v
+                    switch (conin[2]) {
+                    case '\0':
+                        console->puts("Usage: v\n"
+                                      "Desc: list variables");
+                        break;
+                    case 'a':
+                        console->puts("Usage: va <number> <string>\n"
+                                      "Desc: edit a variable, callable with $<number>\n");
+                        break;
+                    case 'd':
+                        console->puts("Usage: vd <number>\n"
+                                      "Desc: delete variable\n");
+                        break;
+                    case 'l':
+                        console->puts("Usage: vl [number]\n"
+                                      "Desc: list variables and its content, if number provided will display only one variable content\n");
+                        break;
+                    default: invalid_command = true;
+                    }
+                }
+                break;
+            default: invalid_command = true;
+            }
+            if(invalid_command){
+                console->puts("`");
+                console->puts(conin);
+                console->puts("` is not a valid command\n");
+            }
+        } else {
+        }
+        memset(conin, 0, sizeof(conin));
+        console->puts("39gii >");
+        break;
+    default:
+        switch (key) {
+            K(KEY_0, "0", "@", "@", "\"", "\"")
+            K(KEY_1, "1", "$", "$", "X", "x")
+            K(KEY_2, "2", "2", "2", "Y", "y")
+            K(KEY_3, "3", "3", "3", "Z", "z")
+            K(KEY_4, "4", "#", "#", "T", "t")
+            K(KEY_5, "5", "[", "[", "U", "u")
+            K(KEY_6, "6", "]", "]", "V", "v")
+            K(KEY_7, "7", "&", "&", "P", "p")
+            K(KEY_8, "8", "{", "{", "Q", "q")
+            K(KEY_9, "9", "}", "}", "R", "r")
+            K(KEY_VARS, "$", "`", "`", "A", "a")
+            K(KEY_MATH, "?", "~", "~", "B", "b")
+            K(KEY_ABC, "\'", "\'", "\'", "C", "c")
+            K(KEY_XTPHIN, "X", "e", "e", "D", "d")
+            // K(KEY_BACKSPACE, "\x7F", "\x7F", "\x7F", "\x7F", "\x7F")
+            K(KEY_SIN, "e", "E", "E", "E", "e")
+            K(KEY_COS, "f", "F", "F", "F", "f")
+            K(KEY_TAN, "g", "G", "G", "G", "g")
+            K(KEY_LN, "h", "H", "H", "H", "h")
+            K(KEY_LOG, "l", "L", "L", "L", "l")
+            K(KEY_X2, "j", "J", "J", "J", "j")
+            K(KEY_XY, "^", "^", "^", "K", "k")
+            K(KEY_LEFTBRACKET, "(", "<", "<", "L", "l")
+            K(KEY_RIGHTBRACKET, ")", ">", ">", "M", "m")
+            K(KEY_DIVISION, "/", "/", "/", "N", "n")
+            K(KEY_COMMA, ",", "`", "`", "O", "o")
+            K(KEY_MULTIPLICATION, "*", "!", "!", "S", "s")
+            K(KEY_SUBTRACTION, "-", "-", "-", "W", "w")
+            K(KEY_PLUS, "+", "+", "+", " ", " ")
+            K(KEY_DOT, ".", "=", "=", ":", ":")
+            K(KEY_NEGATIVE, "_", "|", "|", ";", ";")
+            // K(KEY_ENTER, "\n", "\n", "\n", "\n", "\n")
+        }
+        if (s) {
+            if (sizeof(conin) / sizeof(char) < (strlen(conin) + strlen(s) + 1)) {
+                char *new_conin = (char *)malloc(sizeof(conin) * 2);
+                strcpy(new_conin, conin);
+                free(conin);
+                conin = new_conin;
+            }
+            strcat(conin, s);
+            console->puts(s);
+        }
     }
 #undef K
 }

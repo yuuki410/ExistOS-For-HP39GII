@@ -974,7 +974,7 @@ struct SimpShell {
         if (this->cmd_buffer) {
             free((void *)(this->cmd_buffer));
         }
-        this->cmd_buffer = "";
+        this->cmd_buffer = (char*)"";
         this->cmd_buffer_size = 0;
     }
 
@@ -1092,6 +1092,8 @@ struct SimpShell {
 #define K(key, normal, shift_l, shift_r, alpha_s, alpha_c) \
     if (shift == 1) {                                      \
     }
+
+#undef K
     }
 
     /**
